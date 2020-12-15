@@ -5,7 +5,7 @@
   become: yes
 
   vars:
-    db_name: employee_db6
+    db_name: employee_db
     db_user: db_user
     db_password: Passw0rd
 
@@ -39,13 +39,13 @@
     - name: Create Application Database
       mysql_db: 
         name: '{{db_name}}'
-        #login_unix_socket: /var/run/mysqld/mysqld.sock
         login_user: "{{ db_user }}"
         login_password: '{{db_password}}'
-        #login_host: '%'
         state: present
-      notify: UpdateDB with data all on nodes 
-
+      notify: 
+      - UpdateDB
+      - Start web-application
+      - Check App is responding to http calls
 
     - name: Install Python Flask dependencies
       pip:
@@ -57,21 +57,36 @@
         url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/app.py
         dest: /opt/app.py
         mode: '0440'
-    
-    - name: Start web-application
-      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
-      register: result
-
-    - name: Print the generated password
-      debug:
-        msg: "The password is {{ result }}"
 
     - name: Download DB dump
       get_url:
         url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
         dest: /opt/db.dump
-        mode: '777'
+        mode: '0440'
 
+    - name: Check App is responding to http calls
+      uri:
+        url: http://localhost:5000
+      register: result
+      ignore_errors: yes
+    - debug:
+           var: result
+
+  handlers:
+    - name: UpdateDB
+      mysql_db: 
+        name: '{{db_name}}'
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        state: import
+        target: '/opt/db.dump'
+      register: importoutput
+    - debug:
+          var: importoutput
+
+    - name: Start web-application
+      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
+      register: result
+    
     - name: Check App is responding to http calls
       uri:
         url: http://localhost:5000
@@ -79,13 +94,6 @@
     - debug:
            var: result
 
-  handlers:
-  - name: UpdateDB with data all on nodes if new db is created, if already there, do nothing 
-    mysql_db: 
-      name: '{{db_name}}'
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-      state: import
-      target: '/opt/db.dump'
-    register: importoutput
-  - debug:
-        var: importoutput
+    - debug:
+        msg:
+        - "example of debug"
