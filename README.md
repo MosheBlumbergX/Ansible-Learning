@@ -67,4 +67,4 @@ Open a browser and go to URL
     http://<IP>:5000/read%20from%20database     => JOHN
 
 
-[For Ansible us this README](READMEANSIBLE.md)
+[For Ansible use this README](READMEANSIBLE.md)
