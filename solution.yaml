@@ -1,0 +1,66 @@
+-
+  name: Deploy a web application
+  hosts: db_and_web_server*
+  become_user: root
+  become: yes
+
+  vars:
+    db_name: employee_db
+    db_user: db_user
+    db_password: Passw0rd
+
+  tasks:
+    - name: Install dependencies
+      apt:  
+        name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']
+        state: present
+
+    - name: Install MySQL database
+      apt:
+        name: ['mysql-server', 'mysql-client']
+        state:  present
+
+    - name: Start Mysql Service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create Application DB User
+      mysql_user: 
+        name: "{{ db_user }}"
+        password: '{{db_password}}'
+        #password: '{‌{db_password}}' # my string    # broken #  zero width non joiner 
+        priv: '*.*:ALL' 
+        state: 'present' 
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      register: result
+
+    - name: Create Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        #login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        #login_host: '%'
+        state: present
+
+    - name: Install Python Flask dependencies
+      pip:
+        name: ['flask','flask-mysql']
+        state: present
+
+    - name: Download app.py
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/app.py
+        dest: /opt/app.py
+        mode: '0440'
+    
+    - name: Start web-application
+      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
+      register: result
+
+    - name: Print the generated password
+      debug:
+        msg: "The password is {{ result }}"
+  
