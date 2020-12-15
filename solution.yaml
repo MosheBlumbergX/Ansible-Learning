@@ -5,7 +5,7 @@
   become: yes
 
   vars:
-    db_name: employee_db
+    db_name: employee_db6
     db_user: db_user
     db_password: Passw0rd
 
@@ -35,7 +35,7 @@
         state: 'present' 
         login_unix_socket: /var/run/mysqld/mysqld.sock
       register: result
-
+        
     - name: Create Application Database
       mysql_db: 
         name: '{{db_name}}'
@@ -44,6 +44,8 @@
         login_password: '{{db_password}}'
         #login_host: '%'
         state: present
+      notify: UpdateDB with data all on nodes 
+
 
     - name: Install Python Flask dependencies
       pip:
@@ -68,21 +70,22 @@
       get_url:
         url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
         dest: /opt/db.dump
-        mode: '0440'
+        mode: '777'
 
-    #- name: UpdateDB with data all on nodes 
-    #  mysql_db: 
-    #    name: '{{db_name}}'
-    #    login_unix_socket: /var/run/mysqld/mysqld.sock
-    #    state: import
-    #    target: /opt/db.dump
-    #  register: result
-    #- debug:
-    #       var: result
-
-    - name: post to consul
+    - name: Check App is responding to http calls
       uri:
         url: http://localhost:5000
       register: result
     - debug:
            var: result
+
+  handlers:
+  - name: UpdateDB with data all on nodes if new db is created, if already there, do nothing 
+    mysql_db: 
+      name: '{{db_name}}'
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      state: import
+      target: '/opt/db.dump'
+    register: importoutput
+  - debug:
+        var: importoutput
