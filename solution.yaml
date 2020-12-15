@@ -63,4 +63,26 @@
     - name: Print the generated password
       debug:
         msg: "The password is {{ result }}"
-  
+
+    - name: Download DB dump
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
+        dest: /opt/db.dump
+        mode: '0440'
+
+    #- name: UpdateDB with data all on nodes 
+    #  mysql_db: 
+    #    name: '{{db_name}}'
+    #    login_unix_socket: /var/run/mysqld/mysqld.sock
+    #    state: import
+    #    target: /opt/db.dump
+    #  register: result
+    #- debug:
+    #       var: result
+
+    - name: post to consul
+      uri:
+        url: http://localhost:5000
+      register: result
+    - debug:
+           var: result
