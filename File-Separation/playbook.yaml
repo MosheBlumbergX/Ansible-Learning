@@ -4,13 +4,8 @@
   become_user: root
   become: yes
 
-  vars:
-    db_name: employee_db
-    db_user: db_user
-    db_password: Passw0rd
-
   tasks:
-
+  
     - name: Install dependencies
       apt:  
         name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']

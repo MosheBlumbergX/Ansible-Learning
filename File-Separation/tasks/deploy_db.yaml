@@ -1,0 +1,49 @@
+    - name: Install MySQL database
+      apt:
+        name: ['mysql-server', 'mysql-client']
+        state:  present
+
+    - name: Download DB dump
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/db.dump
+        dest: /opt/db.dump
+        mode: '0440'
+
+    - name: Start Mysql Service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create Application DB User
+      mysql_user: 
+        name: "{{ db_user }}"
+        password: '{{db_password}}'
+        priv: '*.*:ALL' 
+        state: 'present' 
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      register: result
+        
+    - name: Create Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: present
+
+    - name: UpdateDB
+      mysql_db: 
+        name: '{{db_name}}'
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        state: import
+        target: '/opt/db.dump'
+      register: importoutput
+    #- debug:
+    #      var: importoutput
+
+    - name: Delete Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: absent

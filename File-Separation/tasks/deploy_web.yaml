@@ -1,0 +1,40 @@
+    - name: Install Python Flask dependencies
+      pip:
+        name: ['flask','flask-mysql']
+        state: present
+
+    - name: Download app.py
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/app.py
+        dest: /opt/app.py
+        mode: '0440'
+
+    - name: Start web-application
+      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
+      register: result
+    
+    - name: Check App is responding to http calls
+      uri:
+        url: "http://localhost:5000/read%20from%20database"
+        return_content: yes
+      register: result
+    - debug:
+           var: result.content
+
+    - name: removal handler
+      ignore_errors: yes
+      shell: "pgrep flask"
+      register: running_processes
+
+    - name: Force kill processes
+      ignore_errors: yes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_processes.stdout_lines }}"
+      when: running_processes.stdout != ""
+
+    - name: Delete Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: absent
