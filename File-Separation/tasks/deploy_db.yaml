@@ -40,10 +40,3 @@
       register: importoutput
     #- debug:
     #      var: importoutput
-
-    - name: Delete Application Database
-      mysql_db: 
-        name: '{{db_name}}'
-        login_user: "{{ db_user }}"
-        login_password: '{{db_password}}'
-        state: absent
