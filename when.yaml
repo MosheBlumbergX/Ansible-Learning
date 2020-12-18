@@ -16,7 +16,7 @@
     - command: echo {{ result.stdout }}
       when: result.stdout != ""
       name: notempty
-    
+
     - command: echo 
       when: result.stdout == ""
       name: empty

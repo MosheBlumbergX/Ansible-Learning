@@ -12,14 +12,6 @@
 
   tasks:
 
-
-# install dep
-# start msql 
-# removedb, ignore 
-# create db 
-# update db
-
-
     - name: Install dependencies
       apt:  
         name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']
@@ -57,7 +49,6 @@
       mysql_user: 
         name: "{{ db_user }}"
         password: '{{db_password}}'
-        #password: '{‌{db_password}}' # my string    # broken #  zero width non joiner 
         priv: '*.*:ALL' 
         state: 'present' 
         login_unix_socket: /var/run/mysqld/mysqld.sock
@@ -69,19 +60,7 @@
         login_user: "{{ db_user }}"
         login_password: '{{db_password}}'
         state: present
-      notify: 
-      - UpdateDB
-      - Start web-application
-      - Check App is responding to http calls
-      - removal handler
 
-    - name: force delete db  
-      command: echo hello # remove hello to check 
-      register: result
-      notify:
-      - removal handler
-
-  handlers:
     - name: UpdateDB
       mysql_db: 
         name: '{{db_name}}'
@@ -101,10 +80,13 @@
         url: "http://localhost:5000/read%20from%20database"
         return_content: yes
       register: result
-
     - debug:
-        msg:
-        - "example of debug"
+           var: result.content
+
+    - name: removal handler
+      ignore_errors: yes
+      shell: "pgrep flask"
+      register: running_processes
 
     - name: Force kill processes
       ignore_errors: yes
@@ -118,13 +100,3 @@
         login_user: "{{ db_user }}"
         login_password: '{{db_password}}'
         state: absent
-
-    - name: removal handler
-      ignore_errors: yes
-      shell: "pgrep flask"
-      register: running_processes
-      notify:
-      - Force kill processes
-      - Delete Application Database
-    - debug:
-           var: running_processes
