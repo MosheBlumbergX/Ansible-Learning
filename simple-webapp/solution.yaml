@@ -36,13 +36,13 @@
 
     - name: Download app.py
       get_url:
-        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/app.py
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/app.py
         dest: /opt/app.py
         mode: '0440'
 
     - name: Download DB dump
       get_url:
-        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/db.dump
         dest: /opt/db.dump
         mode: '0440'
 

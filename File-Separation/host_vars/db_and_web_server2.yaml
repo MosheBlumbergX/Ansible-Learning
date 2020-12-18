@@ -1,4 +1,4 @@
-ansible_host: ec2-3-8-127-242.eu-west-2.compute.amazonaws.com
+ansible_host: ec2-52-56-146-244.eu-west-2.compute.amazonaws.com
 
 #ansible_host=sql01.xyz.com 
 #ansible_connection=ssh 
