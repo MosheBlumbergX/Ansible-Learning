@@ -1,0 +1,22 @@
+-
+  name: Check When Condition
+  hosts: db_and_web_server*
+  become_user: root
+  become: yes
+
+  tasks:
+    - name: echo  
+      command: echo hello # remove hello to check 
+      register: result
+      notify:
+      - notempty
+      - empty
+
+  handlers:
+    - command: echo {{ result.stdout }}
+      when: result.stdout != ""
+      name: notempty
+    
+    - command: echo 
+      when: result.stdout == ""
+      name: empty

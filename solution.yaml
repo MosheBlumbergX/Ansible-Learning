@@ -10,15 +10,41 @@
     db_password: Passw0rd
 
   tasks:
+
+
+# install dep
+# start msql 
+# removedb, ignore 
+# create db 
+# update db
+
+
     - name: Install dependencies
       apt:  
         name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']
+        state: present
+
+    - name: Install Python Flask dependencies
+      pip:
+        name: ['flask','flask-mysql']
         state: present
 
     - name: Install MySQL database
       apt:
         name: ['mysql-server', 'mysql-client']
         state:  present
+
+    - name: Download app.py
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/app.py
+        dest: /opt/app.py
+        mode: '0440'
+
+    - name: Download DB dump
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
+        dest: /opt/db.dump
+        mode: '0440'
 
     - name: Start Mysql Service
       service:
@@ -46,31 +72,13 @@
       - UpdateDB
       - Start web-application
       - Check App is responding to http calls
+      - removal handler
 
-    - name: Install Python Flask dependencies
-      pip:
-        name: ['flask','flask-mysql']
-        state: present
-
-    - name: Download app.py
-      get_url:
-        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/app.py
-        dest: /opt/app.py
-        mode: '0440'
-
-    - name: Download DB dump
-      get_url:
-        url: https://raw.githubusercontent.com/MosheBlumbergX/simple-webapp/master/db.dump
-        dest: /opt/db.dump
-        mode: '0440'
-
-    - name: Check App is responding to http calls
-      uri:
-        url: http://localhost:5000
+    - name: force delete db  
+      command: echo hello # remove hello to check 
       register: result
-      ignore_errors: yes
-    - debug:
-           var: result
+      notify:
+      - removal handler
 
   handlers:
     - name: UpdateDB
@@ -97,3 +105,26 @@
     - debug:
         msg:
         - "example of debug"
+
+    - name: Force kill processes
+      ignore_errors: yes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_processes.stdout_lines }}"
+      when: running_processes.stdout != ""
+
+    - name: Delete Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: absent
+
+    - name: removal handler
+      ignore_errors: yes
+      shell: "pgrep flask"
+      register: running_processes
+      notify:
+      - Force kill processes
+      - Delete Application Database
+    - debug:
+           var: running_processes
