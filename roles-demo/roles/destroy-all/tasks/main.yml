@@ -1,0 +1,19 @@
+---
+# tasks file for destroy-all
+    - name: removal handler
+      ignore_errors: yes
+      shell: "pgrep flask"
+      register: running_processes
+
+    - name: Force kill processes
+      ignore_errors: yes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_processes.stdout_lines }}"
+      when: running_processes.stdout != ""
+
+    - name: Delete Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: absent

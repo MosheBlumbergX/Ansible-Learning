@@ -1,0 +1,23 @@
+-
+  name: Deploy a web application
+  hosts: db_and_web_server*
+  become_user: root
+  become: yes
+  tasks:
+    - command: /pathtoscript/script-web.py
+      async: 360
+      poll: 0
+      register: web-result
+
+    - command: /pathtoscript/script-db.py
+      async: 360
+      poll: 0
+      register: db-result
+
+    - name: Check status of task
+      async_status: jid={{ web-result.ansible_job_id }}
+      register: job_result
+      until: job_result.finished
+      retries: 30
+
+# poll 0 will fire and forget 

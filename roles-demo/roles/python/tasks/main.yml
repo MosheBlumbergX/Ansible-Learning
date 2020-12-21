@@ -1,0 +1,6 @@
+---
+# tasks file for python
+    - name: Install dependencies
+      apt:  
+        name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']
+        state: present

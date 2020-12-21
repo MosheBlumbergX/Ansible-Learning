@@ -1,0 +1,17 @@
+# Ansible Playbook, 2 plays in 1 book
+-
+  name: Deploy a db application
+  hosts: db_and_web_server1
+  become_user: root
+  become: yes
+  roles:
+  - mysql_db
+
+-
+  name: Deploy a web application
+  hosts: db_and_web_server2
+  become_user: root
+  become: yes
+  roles:
+  - flask_web
+  

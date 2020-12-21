@@ -1,0 +1,17 @@
+-
+  name: mail 
+  hosts: db_and_web_server*
+  become_user: root
+  become: yes
+
+  tasks:
+
+    - mail:
+        to: j@j
+        subject: s1
+        body: b1
+      ignore_errors: yes
+
+    - command: cat /path/file.log
+      register: command_output
+      failed_when: "'ERROR' in command_output.stdout"

@@ -1,0 +1,102 @@
+-
+  name: Deploy a web application
+  hosts: db_and_web_server*
+  strategy: free # completes on each server on it's on time, not waiting for each other
+  become_user: root
+  become: yes
+
+  vars:
+    db_name: employee_db
+    db_user: db_user
+    db_password: Passw0rd
+
+  tasks:
+
+    - name: Install dependencies
+      apt:  
+        name: ['python', 'python-setuptools', 'python-dev', 'build-essential', 'python-pip', 'python-mysqldb']
+        state: present
+
+    - name: Install Python Flask dependencies
+      pip:
+        name: ['flask','flask-mysql']
+        state: present
+
+    - name: Install MySQL database
+      apt:
+        name: ['mysql-server', 'mysql-client']
+        state:  present
+
+    - name: Download app.py
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/app.py
+        dest: /opt/app.py
+        mode: '0440'
+
+    - name: Download DB dump
+      get_url:
+        url: https://raw.githubusercontent.com/MosheBlumbergX/Ansible-Learning/master/simple-webapp/db.dump
+        dest: /opt/db.dump
+        mode: '0440'
+
+    - name: Start Mysql Service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create Application DB User
+      mysql_user: 
+        name: "{{ db_user }}"
+        password: '{{db_password}}'
+        priv: '*.*:ALL' 
+        state: 'present' 
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      register: result
+        
+    - name: Create Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: present
+
+    - name: UpdateDB
+      mysql_db: 
+        name: '{{db_name}}'
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        state: import
+        target: '/opt/db.dump'
+      register: importoutput
+    - debug:
+          var: importoutput
+
+    - name: Start web-application
+      shell: FLASK_APP=/opt/app.py nohup flask run --host=0.0.0.0 &
+      register: result
+    
+    - name: Check App is responding to http calls
+      uri:
+        url: "http://localhost:5000/read%20from%20database"
+        return_content: yes
+      register: result
+    - debug:
+           var: result.content
+
+    - name: removal handler
+      ignore_errors: yes
+      shell: "pgrep flask"
+      register: running_processes
+
+    - name: Force kill processes
+      ignore_errors: yes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_processes.stdout_lines }}"
+      when: running_processes.stdout != ""
+
+    - name: Delete Application Database
+      mysql_db: 
+        name: '{{db_name}}'
+        login_user: "{{ db_user }}"
+        login_password: '{{db_password}}'
+        state: absent
