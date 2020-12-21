@@ -5,11 +5,12 @@
   become: yes
 
   tasks:
-
-    - mail:
-        to: j@j
-        subject: s1
-        body: b1
+  
+    - name: "Send notification email"
+      mail:
+        to: devops@corp.com
+        subject: Server Deployed!
+        body: Web Server Deployed Successfully
       ignore_errors: yes
 
     - command: cat /path/file.log

@@ -1,0 +1,35 @@
+-
+  name: jinja
+  hosts: localhost
+
+
+  vars:
+    db_name: employee_db
+    name: Bond
+  tasks:
+
+    - debug:
+        msg:
+        - "example of debug {{ db_name }}"
+
+    - debug:
+        msg:
+        - "The name is {{ name }}"
+
+# filters
+
+    - debug:
+        msg:
+        - "The name is {{ name  | upper}}"
+
+    - debug:
+        msg:
+        - "The name is {{ name | lower}}"
+
+    - debug:
+        msg:
+        - The name is {{ name | replace ("Bond","Moshe") }}
+
+    - debug:
+        msg:
+        - The name is {{ first_name | default("James") }} {{ name }}
