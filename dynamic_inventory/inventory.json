@@ -1,0 +1,50 @@
+{
+    "_meta": {
+        "hostvars": {
+            "t1": {
+                "ansible_connection": "ssh", 
+                "ansible_host": "t1.eu-west-2.compute.amazonaws.com", 
+                "ansible_ssh_pass": "Lin$Pass", 
+                "ansible_user": "root"
+            }, 
+            "t2": {
+                "ansible_connection": "ssh", 
+                "ansible_host": "t2.eu-west-2.compute.amazonaws.com", 
+                "ansible_ssh_pass": "Lin$Pass", 
+                "ansible_user": "root"
+            }, 
+            "t3": {
+                "ansible_connection": "ssh", 
+                "ansible_host": "t3.eu-west-2.compute.amazonaws.com", 
+                "ansible_ssh_pass": "Lin$Pass", 
+                "ansible_user": "root"
+            }
+        }
+    }, 
+    "all": {
+        "children": [
+            "db-hosts", 
+            "ng", 
+            "ungrouped", 
+            "web-hosts"
+        ]
+    }, 
+    "db-hosts": {
+        "hosts": [
+            "t1", 
+            "t2", 
+            "t3"
+        ]
+    }, 
+    "ng": {
+        "hosts": [
+            "t3"
+        ]
+    }, 
+    "web-hosts": {
+        "hosts": [
+            "t1", 
+            "t2"
+        ]
+    }
+}
